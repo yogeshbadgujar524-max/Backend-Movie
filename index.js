@@ -10,8 +10,26 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-mongoose.connect("mongodb://127.0.0.1:27017/userdb")
 
+let isConnected = false;
+
+async function connectToMongoDB(){
+  try{
+    mongoose.connect("mongodb://127.0.0.1:27017/userdb")
+    console.log("Connected to MongoDB")
+  }
+  catch(err){
+    console.log("Error in connection",err)
+  }
+}
+
+
+app.use((req,res,next)=>{
+  if(!isConnected){
+    connectToMongoDB()
+  }
+  next();
+})
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -131,6 +149,8 @@ app.delete("/register/:id", async (req, res) => {
   }
 });
 
-app.listen(3001,()=>{
-    console.log("Server is running");
-})
+// app.listen(3001,()=>{
+//     console.log("Server is running");
+// })
+
+module.exports = app
