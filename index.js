@@ -68,10 +68,13 @@ app.post("/login", async (req, res) => {
 // -------------------- REGISTER
 app.post("/register", async (req, res) => {
   try {
+    console.log(req.body); // 🔥 debug incoming data
+
     const user = await UserdbModel.create(req.body);
     res.json(user);
+
   } catch (err) {
-    console.error(err);
+    console.error("REGISTER ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
