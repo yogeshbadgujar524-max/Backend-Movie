@@ -7,6 +7,7 @@ const UserdbModel = require("./models/Userdb");
 const ContactdbModel = require("./models/Contactdb");
 const BookingdbModel = require("./models/Bookingdb");
 const PaymentModel = require("./models/Payment");
+const mongoose = require("mongoose");
 
 const app = express();
 
@@ -18,18 +19,18 @@ app.use(cors());
 // --------------------
 let isConnected = false;
 
-async function connectToMongoDB() {
-  if (isConnected) return;
 
+async function connectToMongoDB() {
   try {
+    if (mongoose.connection.readyState === 1) return;
+
     await mongoose.connect(process.env.MONGO_URL);
-    isConnected = true;
-    console.log("✅ Connected to MongoDB");
+
+    console.log("MongoDB Connected");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("MongoDB Error:", err.message);
   }
 }
-
 // Connect ONCE (important for Vercel)
 connectToMongoDB();
 
