@@ -14,14 +14,17 @@ app.use(cors())
 
 let isConnected = false;
 
-async function connectToMongoDB(){
-  try{
-    mongoose.connect(process.env.MONGO_URL)
-    isConnected = true
-    console.log("Connected to MongoDB")
-  }
-  catch(err){
-    console.log("Error in connection",err)
+async function connectToMongoDB() {
+  if (isConnected) return;
+
+  try {
+    await mongoose.connect(process.env.MONGO_URL);
+
+    isConnected = true;
+
+    console.log("Connected to MongoDB");
+  } catch (err) {
+    console.log("Error in connection", err);
   }
 }
 
