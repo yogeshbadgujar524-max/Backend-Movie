@@ -1,17 +1,21 @@
-const express = require("express")
-const mongoose = require('mongoose')
-const cors = require("cors")
-const UserdbModel = require('./models/Userdb')
-const ContactdbModel = require('./models/Contactdb')
-const BookingdbModel = require('./models/Bookingdb')
-const PaymentModel = require('./models/Payment')
-require('dotenv').config()
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
 
-const app = express()
-app.use(express.json())
-app.use(cors())
+const UserdbModel = require("./models/Userdb");
+const ContactdbModel = require("./models/Contactdb");
+const BookingdbModel = require("./models/Bookingdb");
+const PaymentModel = require("./models/Payment");
 
+const app = express();
 
+app.use(express.json());
+app.use(cors());
+
+// --------------------
+// MongoDB Connection
+// --------------------
 let isConnected = false;
 
 async function connectToMongoDB() {
@@ -19,131 +23,159 @@ async function connectToMongoDB() {
 
   try {
     await mongoose.connect(process.env.MONGO_URL);
-
     isConnected = true;
-
-    console.log("Connected to MongoDB");
+    console.log("✅ Connected to MongoDB");
   } catch (err) {
-    console.log("Error in connection", err);
+    console.error("❌ MongoDB connection error:", err.message);
   }
 }
 
+// Connect ONCE (important for Vercel)
+connectToMongoDB();
 
-app.use(async (req, res, next) => {
-  await connectToMongoDB();
-  next();
+// --------------------
+// ROUTES
+// --------------------
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("Backend is running");
 });
 
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// -------------------- LOGIN
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  UserdbModel.findOne({ email: email })
-    .then(user => {
-      if (user) {
-        if (user.password === password) {
-          res.json(user); // send full user
-        } else {
-          res.json("password is incorrect");
-        }
-      } else {
-        res.json("No record existed");
-      }
-    });
+    const user = await UserdbModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/register' , (req,res)=>{
-    UserdbModel.create(req.body)
-    .then(users => res.json(users))
-    .catch(error => res.json(error))
-})
+// -------------------- REGISTER
+app.post("/register", async (req, res) => {
+  try {
+    const user = await UserdbModel.create(req.body);
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get("/register", async (req, res) => {
   try {
     const users = await UserdbModel.find();
     res.json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-
-app.post('/contact',(req,res)=>{
-    ContactdbModel.create(req.body)
-    .then(contacts => res.json(contacts))
-    .catch(error => res.json(error))
-})
+// -------------------- CONTACT
+app.post("/contact", async (req, res) => {
+  try {
+    const contact = await ContactdbModel.create(req.body);
+    res.json(contact);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get("/contact", async (req, res) => {
   try {
-    const contact = await ContactdbModel.find();
-    res.json(contact);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal server error" });
+    const contacts = await ContactdbModel.find();
+    res.json(contacts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/Payment',(req,res)=>{
-    PaymentModel.create(req.body)
-    .then(payment => res.json(payment))
-    .catch(error => res.json(error))
-})
+// -------------------- PAYMENT
+app.post("/payment", async (req, res) => {
+  try {
+    const payment = await PaymentModel.create(req.body);
+    res.json(payment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post('/booking',(req,res)=>{
-    BookingdbModel.create(req.body)
-    .then(bookings => res.json(bookings))
-    .catch(error => res.json(error))
-})
+// -------------------- BOOKING
+app.post("/booking", async (req, res) => {
+  try {
+    const booking = await BookingdbModel.create(req.body);
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get("/booking", async (req, res) => {
   try {
-    const booking = await BookingdbModel.find();
-    res.json(booking);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-// Delete movie by ID
-app.delete("/booking/:bookingId", async (req, res) => {
-  try {
-    const deletedBooking = await BookingdbModel.findOneAndDelete({ bookingId: req.params.bookingId });
-    if (!deletedBooking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-    res.json({ message: "Movie deleted successfully" });
+    const bookings = await BookingdbModel.find();
+    res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Get booking by user email
 app.get("/booking/user/:email", async (req, res) => {
   try {
-    const bookings = await BookingdbModel.find({ email: req.params.email });
+    const bookings = await BookingdbModel.find({
+      email: req.params.email,
+    });
     res.json(bookings);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-
-
-
-// Update user by ID
-app.put("/register/:id", async (req, res) => {
-  try {
-    const updatedUser = await UserdbModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Delete user by ID
+// Delete booking
+app.delete("/booking/:bookingId", async (req, res) => {
+  try {
+    const deleted = await BookingdbModel.findOneAndDelete({
+      bookingId: req.params.bookingId,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    res.json({ message: "Booking deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------- USER UPDATE / DELETE
+app.put("/register/:id", async (req, res) => {
+  try {
+    const updated = await UserdbModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete("/register/:id", async (req, res) => {
   try {
     await UserdbModel.findByIdAndDelete(req.params.id);
@@ -153,8 +185,5 @@ app.delete("/register/:id", async (req, res) => {
   }
 });
 
-// app.listen(3001,()=>{
-//     console.log("Server is running");
-// })
-
-module.exports = app
+// -------------------- EXPORT (Vercel required)
+module.exports = app;
