@@ -5,6 +5,7 @@ const UserdbModel = require('./models/Userdb')
 const ContactdbModel = require('./models/Contactdb')
 const BookingdbModel = require('./models/Bookingdb')
 const PaymentModel = require('./models/Payment')
+require('dotenv').config()
 
 const app = express()
 app.use(express.json())
@@ -15,7 +16,8 @@ let isConnected = false;
 
 async function connectToMongoDB(){
   try{
-    mongoose.connect("mongodb://127.0.0.1:27017/userdb")
+    mongoose.connect(process.env.MONGO_URL)
+    isConnected = true
     console.log("Connected to MongoDB")
   }
   catch(err){
@@ -24,12 +26,11 @@ async function connectToMongoDB(){
 }
 
 
-app.use((req,res,next)=>{
-  if(!isConnected){
-    connectToMongoDB()
-  }
+app.use(async (req, res, next) => {
+  await connectToMongoDB();
   next();
-})
+});
+
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
