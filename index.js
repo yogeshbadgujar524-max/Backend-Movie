@@ -26,19 +26,24 @@ app.use(
 // --------------------
 // MongoDB Connection
 // --------------------
-let isConnected = false;
+let cached = global.mongoose;
 
-async function connectToMongoDB() {
-  try {
-    await mongoose.connect(process.env.MONGO_URL);
-
-    console.log("MongoDB Connected");
-  } catch (err) {
-    console.error("MongoDB Error:", err.message);
-  }
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
-connectToMongoDB();
+async function connectToMongoDB() {
+  if (cached.conn) return cached.conn;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(process.env.MONGO_URL).then((mongoose) => {
+      return mongoose;
+    });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
 
 // --------------------
 // ROUTES
@@ -52,6 +57,8 @@ app.get("/", (req, res) => {
 // -------------------- LOGIN
 app.post("/login", async (req, res) => {
   try {
+    await connectToMongoDB();
+    
     const { email, password } = req.body;
 
     const user = await UserdbModel.findOne({ email });
@@ -74,7 +81,7 @@ app.post("/login", async (req, res) => {
 // -------------------- REGISTER
 app.post("/register", async (req, res) => {
   try {
-    console.log(req.body); //  debug incoming data
+    await connectToMongoDB(); 
 
     const user = await UserdbModel.create(req.body);
     res.json(user);
@@ -97,6 +104,8 @@ app.get("/register", async (req, res) => {
 // -------------------- CONTACT
 app.post("/contact", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const contact = await ContactdbModel.create(req.body);
     res.json(contact);
   } catch (err) {
@@ -116,6 +125,8 @@ app.get("/contact", async (req, res) => {
 // -------------------- PAYMENT
 app.post("/payment", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const payment = await PaymentModel.create(req.body);
     res.json(payment);
   } catch (err) {
@@ -126,6 +137,8 @@ app.post("/payment", async (req, res) => {
 // -------------------- BOOKING
 app.post("/booking", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const booking = await BookingdbModel.create(req.body);
     res.json(booking);
   } catch (err) {
