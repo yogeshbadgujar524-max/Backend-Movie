@@ -7,7 +7,7 @@ const UserdbModel = require("./models/Userdb");
 const ContactdbModel = require("./models/Contactdb");
 const BookingdbModel = require("./models/Bookingdb");
 const PaymentModel = require("./models/Payment");
-const mongoose = require("mongoose");
+
 
 const app = express();
 
@@ -19,12 +19,17 @@ app.use(cors());
 // --------------------
 let isConnected = false;
 
-
+console.log(process.env.MONGO_URL);
 async function connectToMongoDB() {
   try {
     if (mongoose.connection.readyState === 1) return;
 
-    await mongoose.connect(process.env.MONGO_URL);
+    await mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+console.log("MongoDB Connected Successfully");
 
     console.log("MongoDB Connected");
   } catch (err) {
@@ -68,7 +73,7 @@ app.post("/login", async (req, res) => {
 // -------------------- REGISTER
 app.post("/register", async (req, res) => {
   try {
-    console.log(req.body); // 🔥 debug incoming data
+    console.log(req.body); //  debug incoming data
 
     const user = await UserdbModel.create(req.body);
     res.json(user);
@@ -187,6 +192,15 @@ app.delete("/register/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.post("/add", async (req, res) => {
+  const user = await User.create({
+    name: "test",
+    email: "test@gmail.com"
+  });
+
+  res.json(user);
 });
 
 // -------------------- EXPORT (Vercel required)
