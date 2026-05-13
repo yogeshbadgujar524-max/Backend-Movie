@@ -25,24 +25,16 @@ app.use(
 // --------------------
 let isConnected = false;
 
-console.log(process.env.MONGO_URL);
 async function connectToMongoDB() {
   try {
-    if (mongoose.connection.readyState === 1) return;
-
-    await mongoose.connect(process.env.MONGO_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-console.log("MongoDB Connected Successfully");
+    await mongoose.connect(process.env.MONGO_URL);
 
     console.log("MongoDB Connected");
   } catch (err) {
     console.error("MongoDB Error:", err.message);
   }
 }
-// Connect ONCE (important for Vercel)
+
 connectToMongoDB();
 
 // --------------------
