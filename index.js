@@ -194,12 +194,6 @@ app.delete("/register/:id", async (req, res) => {
   }
 });
 
-app.post("/add", async (req, res) => {
-  const user = await User.create({
-    name: "test",
-    email: "test@gmail.com"
-  });
-
   res.json(user);
 });
 
