@@ -58,7 +58,7 @@ app.get("/", (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     await connectToMongoDB();
-    
+
     const { email, password } = req.body;
 
     const user = await UserdbModel.findOne({ email });
@@ -94,6 +94,8 @@ app.post("/register", async (req, res) => {
 
 app.get("/register", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const users = await UserdbModel.find();
     res.json(users);
   } catch (err) {
@@ -115,6 +117,8 @@ app.post("/contact", async (req, res) => {
 
 app.get("/contact", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const contacts = await ContactdbModel.find();
     res.json(contacts);
   } catch (err) {
@@ -148,6 +152,8 @@ app.post("/booking", async (req, res) => {
 
 app.get("/booking", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const bookings = await BookingdbModel.find();
     res.json(bookings);
   } catch (err) {
@@ -158,9 +164,12 @@ app.get("/booking", async (req, res) => {
 // Get booking by user email
 app.get("/booking/user/:email", async (req, res) => {
   try {
+    await connectToMongoDB();
+
     const bookings = await BookingdbModel.find({
       email: req.params.email,
     });
+
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: err.message });
