@@ -194,8 +194,5 @@ app.delete("/register/:id", async (req, res) => {
   }
 });
 
-  res.json(user);
-});
-
 // -------------------- EXPORT (Vercel required)
 module.exports = app;
