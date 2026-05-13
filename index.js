@@ -12,13 +12,16 @@ const PaymentModel = require("./models/Payment");
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(
   cors({
-    origin: "https://frontend-movie-xeyb.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: ["https://frontend-movie-xeyb.vercel.app"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+
 
 // --------------------
 // MongoDB Connection
