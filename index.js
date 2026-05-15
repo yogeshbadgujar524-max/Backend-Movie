@@ -16,7 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: ["https://frontend-movie-icjc.vercel.app"],
+    origin: [
+      "https://frontend-movie-icjc.vercel.app",
+      "http://localhost:5173"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
@@ -216,6 +219,12 @@ app.delete("/register/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+if (process.env.MONGO_URL !== "production") {
+  app.listen(5000, () => {
+    console.log("Server running on port 5000");
+  });
+}
 
 // -------------------- EXPORT (Vercel required)
 module.exports = app;
